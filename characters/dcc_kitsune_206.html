@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dungeon Crawl Classics Neutral Kitsune Character Generator</title>
+    
+	<meta charset="UTF-8">
+	<meta name="description" content="Dungeon Crawl Classics kitsune Character Generator. Goodman Games.">
+	<meta name="keywords" content="Dungeon Crawl Classics, Goodman Games,HTML5,CSS,JavaScript">
+	<meta name="author" content="Mark Tasaka 2017">
+	<link rel="stylesheet" type="text/css" href="css/dcc_kitsune.css">
+	
+</head>
+<body>
+	
+
+	
+   
+  <img id="character_sheet"/>
+   <section>
+    	<p id="name"></p>
+	
+		<span id="strength"></span> <span id="strengthMod"></span>
+		<span id="agility"></span>  <span id="agilityMod"></span>
+		<span id="stamina"></span>  <span id="staminaMod"></span>
+		<span id="personality"></span> <span id="personalityMod"></span>
+		<span id="intelligence"></span> <span id="intelligenceMod"></span>
+		<span id="luck"></span> <span id="luckMod"></span>
+
+    	<p id="occupation"></p>
+    	<p id="alignment"></p>
+
+       
+	   <p id="luckySignDescription"><span id="luckySignNotes"></span>: <span id="luckyRoll"></span> (Bonus: <span id="luckySignBonus"></span>)</p>
+	   
+	   
+	   <P id="languages"><span id="baseLanguages"></span><span id="bonusLanguages"></span></P>
+	   
+		<span id="baseArmourClass"></span>
+	   
+	   <span id="level"></span>
+			 
+	  <span id="title"></span>
+	  <span id="hitPoints"></span>
+	   <span id="zeroWeapon"></span>
+	   <span id="fumbleDie"></span>
+	   <span id="init"></span>
+	   <span id="speed"></span>	 
+	   <span id="melee"></span>	 	
+	   <span id="range"></span>	  
+	   
+	   <span id="ref"></span>
+	   <span id="fort"></span>
+	   <span id="will"></span>
+	   
+	   
+	   <span id="actionDie"></span>
+	   <span id="critDie"></span>
+	   <span id="critTable"></span>
+       
+       <span id="knownSpells"></span>
+       <span id="maxSpells"></span>
+	   
+	</section>
+	
+
+		
+  <script>
+	  
+	  /*
+	  rollDice (numberOfSides, numberOfDiceRolled, numberOfDiceRemoved, baseValue)
+	  */
+	  	function rollDice(numberOfSides, numberOfDiceRolled, numberOfDiceRemoved, baseValue) {
+		
+		if(numberOfSides === undefined || typeof numberOfSides !== 'number'||numberOfSides <=2 || numberOfSides >=30){
+			numberOfSides = 6;
+		}
+		
+		if(numberOfDiceRolled < 0){
+			numberOfDiceRolled =2;
+		}
+		
+		if(numberOfDiceRemoved === undefined || typeof numberOfDiceRemoved !== 'number'||numberOfDiceRemoved >= numberOfDiceRolled){
+			numberOfDiceRemoved =0;
+		}
+		
+		if(baseValue === undefined || typeof baseValue !== 'number'||baseValue < 0){
+			baseValue = 0;
+		}
+		
+		var numbers = [];
+		
+
+		for(var i = 0; i < numberOfDiceRolled; i++){
+			numbers[i] = Math.floor((Math.random() * 6) + 1);
+		}
+		
+        numbers.sort();
+        
+		var sum = baseValue;
+			
+		for(var i = numberOfDiceRemoved; i < numberOfDiceRolled; i++){
+			sum += numbers[i];
+		}
+			
+		return sum ;
+	}
+
+	  
+	/*
+	 Character() - kitsune Character Constructor
+	*/
+	function Character() {
+    var strength = rollDice(6, 4, 1, 0);
+    var agility = rollDice(6, 4, 1, 0);
+    var stamina = rollDice(6, 4, 1, 0);
+    var	personality = rollDice(6, 4, 1, 0);
+    var	intelligence = rollDice(6, 4, 1, 0);
+    var	luck = rollDice(6, 4, 1, 0);
+	var	occupation = getOccupation();
+	var birthAugur = getLuckySign();
+	var strengthModifier = getStrengthModifier(strength);
+	var staminaModifier = getStaminaModifier(stamina);
+	var agilityModifier = getAgilityModifier(agility);
+	var personalityModifier = getPersonalityModifier(personality);
+	var intelligenceModifier = getIntelligenceModifier(intelligence);
+	var luckModifier = getLuckModifier(luck);
+	var baseAC = getBaseArmourClass(agilityModifier) + adjustAC(birthAugur, luckModifier);
+	var kitsune = getKitsune();
+
+		var kitsuneGenerator = {
+			"name": "",
+			"strength": strength,
+			"agility": agility,
+			"stamina": stamina,
+			"personality": personality,
+			"intelligence": intelligence,
+			"luck": luck,
+			"strengthModifier": strengthModifier,
+			"agilityModifier": agilityModifier,
+			"staminaModifier": staminaModifier,
+			"personalityModifier": personalityModifier,
+			"intelligenceModifier": intelligenceModifier,
+			"luckModifier":  luckModifier,
+			"occupation":  occupation.occupation,
+            "alignment": "Neutral",
+			"luckySign": birthAugur.luckySign,
+			"luckyRoll": birthAugur.luckyRoll,
+			"luckySignBonus": luckModifier,
+			"baseLanguages": "Common, Kitsune", 
+			"bonusLanguages": getBonusLanguages (intelligenceModifier, birthAugur, luckModifier),
+			"level": kitsune.level,
+            "title": kitsune.title,
+            "spells": kitsune.knownSpells,
+            "maxSpells": kitsune.maxSpellLevel,
+			"baseArmourClass": baseAC,
+			"hitPoints": hitPoints (kitsune, staminaModifier, hitPointAdjustPerLevel(birthAugur, luckModifier)),
+			"zeroWeapon": occupation.trainedWeapon,
+			"fumbleDie": "d4" + addSign(adjustFumble(birthAugur, luckModifier)),
+			"init": agilityModifier + adjustInit(birthAugur, luckModifier),
+			"speed": 30 + addLuckToSpeed(birthAugur, luckModifier) + "'",
+			"melee": kitsune.attackBonus + strengthModifier + meleeAdjust(birthAugur, luckModifier),
+			"range": kitsune.attackBonus + agilityModifier + rangeAdjust(birthAugur, luckModifier),
+			"ref": kitsune.ref + agilityModifier + adjustRef(birthAugur, luckModifier),
+			"fort": kitsune.fort + staminaModifier + adjustFort(birthAugur,luckModifier),
+			"will": kitsune.will + personalityModifier + adjustWill(birthAugur, luckModifier),
+			"actionDie": kitsune.actionDice,
+			"critDie": kitsune.critDie + "" + addSign(adjustCrit(birthAugur, luckModifier)),
+			"critTable": kitsune.critTable
+
+		}; 
+		return kitsuneGenerator;
+	  
+	  }
+	  
+
+    
+     //getStrengthModifier(strength) - returns the Strength Modifier, which is based on the Strength Score
+    
+    function getStrengthModifier(strength){
+        if(strength === undefined || typeof strength !== 'number'|| strength <=2 || strength >=19){
+            //invalid
+            return -3;
+        }
+		if(strength >=4 && strength <=5){
+			return -2;
+		}
+		else if(strength >=6 && strength <=8){
+			return -1;
+		}
+		else if(strength >=9 && strength <=12){
+			return + 0;
+		}
+		else if(strength >=13 && strength <=15){
+			return + 1;
+		}	
+		else if(strength >=16 && strength <=17){
+			return + 2;
+		}		
+		else if(strength ==18){
+			return + 3;
+		}	
+		return -3;
+	}
+
+
+    
+    // getAgilityModifier(agility) - returns the Agility Modifier, which is based on the Agility Score
+    
+    function getAgilityModifier(agility){
+        if(agility === undefined || typeof agility !== 'number'|| agility <=2 || agility >=19){
+            //invalid
+            return -3;
+        }
+		if(agility >=4 && agility <=5){
+			return -2;
+		}
+		else if(agility >=6 && agility <=8){
+			return -1;
+		}
+		else if(agility >=9 && agility <=12){
+			return 0;
+		}
+		else if(agility >=13 && agility <=15){
+			return 1;
+		}	
+		else if(agility >=16 && agility <=17){
+			return 2;
+		}		
+		else if(agility ==18){
+			return 3;
+		}	
+		return -3;
+	}
+
+    //getStaminaModifier(stamina) - returns the Stamina Modifier, which is based on the Stamina Score
+    function getStaminaModifier(stamina){
+        if(stamina === undefined || typeof stamina !== 'number'|| stamina <=2 || stamina >=19){
+            //invalid
+            return -3;
+        }
+		if(stamina >=4 && stamina <=5){
+			return -2;
+		}
+		else if(stamina >=6 && stamina <=8){
+			return -1;
+		}
+		else if(stamina >=9 && stamina <=12){
+			return + 0;
+		}
+		else if(stamina >=13 && stamina <=15){
+			return + 1;
+		}	
+		else if(stamina >=16 && stamina <=17){
+			return + 2;
+		}		
+		else if(stamina ==18){
+			return + 3;
+		}	
+		return -3;
+	}
+
+    
+    //getPersonalityModifier(personality) - returns the Personality Modifier, which is based on the Personality Score
+    function getPersonalityModifier(personality){
+        if(personality === undefined || typeof personality !== 'number'|| personality <=2 || personality >=19){
+            //invalid
+            return -3;
+        }
+		if(personality >=4 && personality <=5){
+			return -2;
+		}
+		else if(personality >=6 && personality <=8){
+			return -1;
+		}
+		else if(personality >=9 && personality <=12){
+			return + 0;
+		}
+		else if(personality >=13 && personality <=15){
+			return + 1;
+		}	
+		else if(personality >=16 && personality <=17){
+			return + 2;
+		}		
+		else if(personality ==18){
+			return + 3;
+		}	
+		return -3;
+	}
+
+    
+    //getIntelligenceModifier(intelligence) - returns the Intelligence Modifier, which is based on the Intelligence Score 
+    function getIntelligenceModifier(intelligence){
+        if(intelligence === undefined || typeof intelligence !== 'number'|| intelligence <=2 || intelligence >=19){
+            //invalid
+            return -3;
+        }
+		if(intelligence >=4 && intelligence <=5){
+			return -2;
+		}
+		else if(intelligence >=6 && intelligence <=8){
+			return -1;
+		}
+		else if(intelligence >=9 && intelligence <=12){
+			return + 0;
+		}
+		else if(intelligence >=13 && intelligence <=15){
+			return + 1;
+		}	
+		else if(intelligence >=16 && intelligence <=17){
+			return + 2;
+		}		
+		else if(intelligence ==18){
+			return + 3;
+		}	
+		return -3;
+	}
+
+    
+    // getLuckModifier(luck) - returns the luck Modifier, which is based on the luck Score
+    
+    function getLuckModifier(luck){
+        if(luck === undefined || typeof luck !== 'number'|| luck <=2 || luck >=19){
+            //invalid
+            return -3;
+        }
+		if(luck >=4 && luck <=5){
+			return -2;
+		}
+		else if(luck >=6 && luck <=8){
+			return -1;
+		}
+		else if(luck >=9 && luck <=12){
+			return + 0;
+		}
+		else if(luck >=13 && luck <=15){
+			return + 1;
+		}	
+		else if(luck >=16 && luck <=17){
+			return + 2;
+		}		
+		else if(luck ==18){
+			return + 3;
+		}	
+		return -3;
+	}
+	  
+ 
+//  getOccupation() - returns the Randomly Generated Occupation
+function getOccupation(){
+	var occupations = [
+		
+		{"occupation": "Kitsune potter", "race": "Kitsune", "trainedWeapon": "Staff", "damage": "1d4", "tradeGoods": "Clay, 1 lbs."},
+		{"occupation": "Kitsune sword polisher", "race": "Kitsune", "trainedWeapon": "Wakizashi (short sword)", "damage": "1d6", "tradeGoods": "Whetstone"},
+		{"occupation": "Kitsune geisha", "race": "Kitsune", "trainedWeapon": "Dagger", "damage": "1d4", "tradeGoods": "Whig & make-up"},
+		{"occupation": "Kitsune musician", "race": "Kitsune", "trainedWeapon": "Staff", "damage": "1d4", "tradeGoods": "Koto (harp)"},
+		{"occupation": "Kitsune silk dyer", "race": "Kitsune", "trainedWeapon": "Scissors (as dagger)", "damage": "1d4", "tradeGoods": "Silk, 3 yards"},
+		{"occupation": "Kitsune sake brewer", "race": "Kitsune", "trainedWeapon": "Mallet (as club)", "damage": "1d4", "tradeGoods": "1 bottle of sake"},
+		{"occupation": "Kitsune haiku poet", "race": "Kitsune", "trainedWeapon": "Staff", "damage": "1d4", "tradeGoods": "Quill pen & ink"},
+		{"occupation": "Kitsune ink merchant", "race": "Kitsune", "trainedWeapon": "Wakizashi (short sword)", "damage": "1d6", "tradeGoods": "3 vials of ink"},
+		{"occupation": "Kitsune painter", "race": "Kitsune", "trainedWeapon": "Staff", "damage": "1d4", "tradeGoods": "Set of paint brushes"},
+		{"occupation": "Kitsune silk merchant", "race": "Kitsune", "trainedWeapon": "Staff", "damage": "1d4", "tradeGoods": "Kimono"}
+		];
+		return occupations[Math.floor(Math.random() * 10)]; 
+}
+	  
+
+	  
+//getLuckySign() - returns a randomly generated Lucky Sign 
+function getLuckySign(){
+    var luckySign = [
+        {"luckySign": "Harsh winter", "luckyRoll": "All attack rolls"},
+        {"luckySign": "The bull", "luckyRoll": "Melee attack rolls"},
+        {"luckySign": "Fortunate date", "luckyRoll": "Missle fire attack rolls"},
+        {"luckySign": "Raised by wolves", "luckyRoll": "Unarmed attack rolls"},
+        {"luckySign": "Conceived on horseback", "luckyRoll": "Mounted attack rolls"},
+        {"luckySign": "Born on the battlefield", "luckyRoll": "Damage rolls"},
+        {"luckySign": "Path of the bear", "luckyRoll": "Melee damage rolls"},
+        {"luckySign": "Hawkeye", "luckyRoll": "Missle damage rolls"},
+        {"luckySign": "Pack hunter", "luckyRoll": "Attack and damage rolls for 0-level starting weapon"},
+        {"luckySign": "Born under the loom", "luckyRoll": "Skill checks"},
+        {"luckySign": "Fox's cunning", "luckyRoll": "Find/disable traps"},
+        {"luckySign": "Four-leafed clover", "luckyRoll": "Find secret doors"},
+        {"luckySign": "Seventh son", "luckyRoll": "Spell checks"},
+        {"luckySign": "The raging storm", "luckyRoll": "Spell damage"},
+        {"luckySign": "Righteous heart", "luckyRoll": "Turn unholy checks"},
+        {"luckySign": "Surived the plague", "luckyRoll": "Magical healing"},
+        {"luckySign": "Lucky sign", "luckyRoll": "Saving throws"},
+        {"luckySign": "Guardian angel", "luckyRoll": "Saving throws to escape traps"},
+        {"luckySign": "Survived a spider bite", "luckyRoll": "Saving throws against poison"},
+        {"luckySign": "Struck by Lightning", "luckyRoll": "Reflex saving throws"},
+        {"luckySign": "Lived through famine", "luckyRoll": "Fortitude saving throws"},
+        {"luckySign": "Resisted temptation", "luckyRoll": "Will saving throws"},
+        {"luckySign": "Charmed house", "luckyRoll": "Armour class"},
+        {"luckySign": "Speed of the Cobra", "luckyRoll": "Initiative"},
+        {"luckySign": "Bountiful Harvest", "luckyRoll": "Hits points/each level"},
+        {"luckySign": "Warrior's arm", "luckyRoll": "Critical hit tables"},
+        {"luckySign": "Unholy house", "luckyRoll": "Corruption rolls"},
+        {"luckySign": "The Broken Star", "luckyRoll": "Fumbles"},
+        {"luckySign": "Birdsong", "luckyRoll": "Number of Languages"},
+        {"luckySign": "Wild child", "luckyRoll": "Speed"}
+    ];
+	
+	
+    return luckySign[Math.floor(Math.random() * 30)]; 
+}
+
+
+/*
+addBonusLanguages() - returns Randomly selected Kitsune Bonus Languages
+*/
+function addBonusLanguages() {
+	var bonusLanguages = [
+		{"language": "Alignment Tongue"},
+		{"language": "Elf"},
+		{"language": "Halfling"},
+		{"language": "Dwarf"},
+		{"language": "Lizard man"},
+		{"language": "Harpy"},
+		{"language": "Goblin"},
+		{"language": "Gnoll"},
+		{"language": "Hobgoblin"},
+		{"language": "Kobold"},
+		{"language": "Minotaur"},
+		{"language": "Ogre"},
+		{"language": "Orc"},
+		{"language": "Serpent man"},
+		{"language": "Troglodyte"},
+		{"language": "Angelic"},
+		{"language": "Centaur"},
+		{"language": "Demonic"},
+		{"language": "Dragon"},
+		{"language": "Pixie"},
+		{"language": "Naga"},
+		{"language": "Eagle"},
+		{"language": "Horse"},
+		{"language": "Undercommon"}
+			];
+    return bonusLanguages[Math.floor(Math.random() * 24)]; 
+}
+
+/*
+getKitsune - retreives the kitsune with the appropriate statistics for the kitsune's Level
+*/
+function getKitsune() {
+	var kitsune = [
+        
+		{"level": 1,
+		 "title": "Changeling",
+		 "actionDice": "1d20",
+		 "attackBonus": 1,
+		 "critDie": "1d6",
+		 "critTable": "II",
+		 "hd": 1,
+		 "ref": 1,
+		 "fort": 1,
+		 "will": 1,
+		 "knownSpells": 3,
+         "maxSpellLevel": 1
+        },
+        
+		{"level": 2,
+		 "title": "Spell Seeker",
+		 "actionDice": "1d20",
+		 "attackBonus": 1,
+		 "critDie": "1d8",
+		 "critTable": "II",
+		 "hd": 2,
+		 "ref": 1,
+		 "fort": 1,
+		 "will": 1,
+		 "knownSpells": 4,
+         "maxSpellLevel": 1
+        },
+        
+		{"level": 3,
+		 "title": "Spell Weaver",
+		 "actionDice": "1d20",
+		 "attackBonus": 2,
+		 "critDie": "1d8",
+		 "critTable": "II",
+		 "hd": 3,
+		 "ref": 1,
+		 "fort": 1,
+		 "will": 2,
+		 "knownSpells": 5,
+         "maxSpellLevel": 2
+        },
+        
+		{"level": 4,
+		 "title": "Pathfinder",
+		 "actionDice": "1d20",
+		 "attackBonus": 2,
+		 "critDie": "1d10",
+		 "critTable": "II",
+		 "hd": 4,
+		 "ref": 2,
+		 "fort": 2,
+		 "will": 2,
+		 "knownSpells": 6,
+         "maxSpellLevel": 2
+        },
+                
+		{"level": 5,
+		 "title": "Way Seeker",
+		 "actionDice": "1d20+1d14",
+		 "attackBonus": 3,
+		 "critDie": "1d10",
+		 "critTable": "II",
+		 "hd": 5,
+		 "ref": 2,
+		 "fort": 2,
+		 "will": 3,
+		 "knownSpells": 7,
+         "maxSpellLevel": 3
+        },
+               
+		{"level": 6,
+		 "title": "Way Seeker",
+		 "actionDice": "1d20+1d16",
+		 "attackBonus": 3,
+		 "critDie": "1d12",
+		 "critTable": "II",
+		 "hd": 6,
+		 "ref": 2,
+		 "fort": 2,
+		 "will": 4,
+		 "knownSpells": 8,
+         "maxSpellLevel": 3
+        },
+        		
+        {"level": 7,
+		 "title": "Way Seeker",
+		 "actionDice": "1d20+1d20",
+		 "attackBonus": 4,
+		 "critDie": "1d12",
+		 "critTable": "II",
+		 "hd": 7,
+		 "ref": 3,
+		 "fort": 3,
+		 "will": 4,
+		 "knownSpells": 9,
+         "maxSpellLevel": 4
+        },
+                		
+        {"level": 8,
+		 "title": "Way Seeker",
+		 "actionDice": "1d20+1d20",
+		 "attackBonus": 4,
+		 "critDie": "1d14",
+		 "critTable": "II",
+		 "hd": 8,
+		 "ref": 3,
+		 "fort": 3,
+		 "will": 5,
+		 "knownSpells": 10,
+         "maxSpellLevel": 4
+        },
+                        		
+        {"level": 9,
+		 "title": "Way Seeker",
+		 "actionDice": "1d20+1d20",
+		 "attackBonus": 5,
+		 "critDie": "1d14",
+		 "critTable": "II",
+		 "hd": 9,
+		 "ref": 3,
+		 "fort": 3,
+		 "will": 5,
+		 "knownSpells": 12,
+         "maxSpellLevel": 5
+        },
+                
+        {"level": 10,
+		 "title": "Way Seeker",
+		 "actionDice": "1d20+1d20+1d14",
+		 "attackBonus": 5,
+		 "critDie": "1d16",
+		 "critTable": "II",
+		 "hd": 10,
+		 "ref": 4,
+		 "fort": 4,
+		 "will": 6,
+		 "knownSpells": 14,
+         "maxSpellLevel": 5
+        }
+		
+	];
+	
+	
+	return kitsune[5]; 
+}
+	  
+
+/*
+hitPointAdjustPerLevel (luckySign, luckModifier)- returns the additional/minus hit points
+the character received per level from their Stamina modifier and whether they have the Lucky Sign "Bountiful Harvest".
+*/
+function hitPointAdjustPerLevel (luckySign, luckModifier) {
+   var adjust = 0;
+    if (luckySign != undefined && luckySign.luckySign === "Bountiful Harvest"){
+        adjust = luckModifier;
+     }
+	return adjust;
+}
+	  
+// getBaseArmourClass(agilityModifier)- returns the base armour class of the character
+function getBaseArmourClass(agilityModifier){
+	var armourClass = 10;
+	baseArmourClass = armourClass + agilityModifier;
+	return baseArmourClass;
+}	  
+
+
+function addModifierSign (modifier) {
+	if(modifier >= 0 ) {
+		return "+" + modifier;
+	}
+	else {
+		return modifier;
+	}
+}
+	  
+/*addSign (modifier) Adds a + sign to value if value is 1 or greater.  If value is 0, then a empty String "" is returned.
+*/
+function addSign (modifier) {
+	if(modifier > 0 ) {
+		return "+" + modifier;
+	}
+	else if(modifier === 0) {
+		return "";
+	}
+	else {
+		return modifier;
+	}
+}
+	
+	  
+/*
+getBonusLanguages() returns the bonus languages that a character may have due to high intelligence or the Lucky Sign of Bird Song.  A for loop is used to prevent duplicates of languages.
+*/
+function getBonusLanguages (intelligenceModifier, luckySign, luckModifier) {
+	var bonusLanguages = 0;
+	if(bonusLanguages  != undefined && typeof bonusLanguages === 'number') {
+		if(intelligenceModifier <0) {
+			bonusLanguages = 0;
+		}
+		else {
+			
+			bonusLanguages = intelligenceModifier;
+		}
+		
+		bonusLanguages++;
+	}
+	else {
+		return "";
+	}
+	
+	if(luckySign != undefined && luckySign.luckySign === "Birdsong") {
+		bonusLanguages += luckModifier;
+	}
+	
+	if(bonusLanguages <=0) {
+		return "";
+	}
+	var result = ", " + addBonusLanguages().language, newLanguage = "";
+	
+	// loop
+	for(var i = 1; i < bonusLanguages; i++){
+		// 1) get a random lang
+		newLanguage = addBonusLanguages().language;
+		// 2) check the new lang is not repeative
+		if(result.indexOf(newLanguage) != -1){
+			i--;
+			// if yes continue;
+			continue;
+		} else{
+			// if not, add the new lang into the result
+			result += ", " + newLanguage;
+		}
+
+	}
+	return result;
+}
+	  
+/*
+meleeAdjust (luckySign, luckModifier) - adds bonus/penality to Melee attack based on whether the character possesses specific Lucky Signs
+*/
+function meleeAdjust (luckySign, luckModifier) {
+   var adjust = 0;
+    if (luckySign.luckySign != undefined && luckySign.luckySign === "Harsh winter"){
+        adjust = luckModifier;
+     }
+	else if (luckySign.luckySign != undefined && luckySign.luckySign === "The bull") {
+		adjust = luckModifier;
+	}
+	return adjust;
+}
+
+/*
+rangeAdjust (luckySign, luckModifier) - adds bonus/penality to Range attack based on whether the character possesses specific Lucky Signs
+*/	  
+function rangeAdjust (luckySign, luckModifier) {
+   var adjust = 0;
+    if (luckySign.luckySign != undefined && (luckySign.luckySign === "Harsh winter" || luckySign.luckySign === "Fortunate date")){
+        adjust = luckModifier;
+     }
+	return adjust;
+}
+
+/*
+adjustRef (luckySign, luckModifier) - add bonus/penality to Saving Throw based on Lucky Sign
+*/
+function adjustRef (luckySign, luckModifier) {
+   var adjust = 0;
+    if (luckySign.luckySign != undefined && (luckySign.luckySign === "Luck sign" || luckySign.luckySign === "Struck by Lightning")){
+        adjust = luckModifier;
+     }
+	return adjust;
+}
+	 
+/*
+adjustFort (luckySign, luckModifier) - add bonus/penality to Saving Throw based on Lucky Sign
+*/
+function adjustFort (luckySign, luckModifier) {
+   var adjust = 0;
+    if (luckySign.luckySign != undefined && (luckySign.luckySign === "Luck sign" || luckySign.luckySign === "Lived through famine")){
+        adjust = luckModifier;
+     }
+	return adjust;
+}
+	  
+/*
+ addLuckToSpeed (luckySign, luckModifier) adds bonuses to the character's speed if they have a positive Luck Modifier and the Lucky Sign of Wild Child
+*/
+function addLuckToSpeed (luckySign, luckModifier) {
+	var addSpeed = 0;
+	if (luckySign.luckySign != undefined && luckySign.luckySign === "Wild child" && luckModifier == 1){
+		addSpeed = 5;
+	}
+	else if (luckySign.luckySign != undefined && luckySign.luckySign === "Wild child" && luckModifier == 2){
+		addSpeed = 10;
+	}
+	else if (luckySign.luckySign != undefined && luckySign.luckySign === "Wild child" && luckModifier == 3){
+		addSpeed = 15;
+	}
+	return addSpeed;
+}
+	  
+/*
+adjustWill (luckySign, luckModifier) - add bonus/penality to Saving Throw based on Lucky Sign
+*/
+function adjustWill (luckySign, luckModifier) {
+   var adjust = 0;
+    if (luckySign.luckySign != undefined && (luckySign.luckySign === "Luck sign" || luckySign.luckySign === "Resisted temptation")){
+        adjust = luckModifier;
+     }
+	return adjust;
+}	 
+	  
+/*
+adjustInit (luckySign, luckModifier) - add bonus/penality to Initiative based on Lucky Sign
+*/
+function adjustInit (luckySign, luckModifier) {
+   var adjust = 0;
+    if (luckySign.luckySign != undefined && luckySign.luckySign === "Speed of the Cobra"){
+        adjust = luckModifier;
+     }
+	return adjust;
+}	
+
+	  
+/*
+adjustAC (luckySign, luckModifier) - add bonus/penality to AC based on Lucky Sign
+*/
+function adjustAC (luckySign, luckModifier) {
+   var adjust = 0;
+    if (luckySign.luckySign != undefined && luckySign.luckySign === "Charmed house"){
+        adjust = luckModifier;
+     }
+	return adjust;
+}	
+	  
+/*
+adjustCrit (luckySign, luckModifier) - add bonus/penality to Crit based on Lucky Sign
+*/
+function adjustCrit (luckySign, luckModifier) {
+   var adjust = luckModifier * 1;
+    if (luckySign.luckySign != undefined && luckySign.luckySign === "Warrior's arm"){
+        adjust = luckModifier * 2;
+     }
+	return adjust;
+}	
+	  
+/*
+adjustFumble (luckySign, luckModifier) - add bonus/penality to Fumble based on Lucky Sign
+*/
+function adjustFumble  (luckySign, luckModifier) {
+   var adjust = luckModifier * -1;
+    if (luckySign.luckySign != undefined && luckySign.luckySign === "The Broken Star"){
+        adjust = luckModifier * -2;
+     }
+	return adjust;
+}	
+
+	  /*
+adjustMeleeDamage  (luckySign, luckModifier) - add bonus/penality to Melee Damage based on Lucky Sign
+*/
+function adjustMeleeDamage (luckySign, luckModifier) {
+   var adjust = 0;
+    if (luckySign.luckySign != undefined && (luckySign.luckySign === "Born on the battlefield" || luckySign.luckySign === "Path of the bear")){
+        adjust = luckModifier;
+     }
+	return adjust;
+}	
+
+/*
+adjustRangeDamage  (luckySign, luckModifier) - add bonus/penality to Melee Damage based on Lucky Sign
+*/
+function adjustRangeDamage (luckySign, luckModifier) {
+   var adjust = 0;
+    if (luckySign.luckySign != undefined && (luckySign.luckySign === "Born on the battlefield" || luckySign.luckySign === "Hawkeye")){
+        adjust = luckModifier;
+     }
+	return adjust;
+}
+	  
+function adjustSpellCheck  (luckySign, luckModifier) {
+   var adjust = 0;
+    if (luckySign.luckySign != undefined && luckySign.luckySign === "Seventh son"){
+        adjust = luckModifier;
+     }
+	return adjust;
+}	
+  
+/*
+getHitsPoints (kitsune, add1, add2) - retreives the number of hit points that the cleric will have based on their level (kitsune), stamina modifier (add1) and Lucky Sign (add2).  Luck Modifer applies if Bountiful Harvest luck sign is present.
+*/
+function hitPoints (kitsune, add1, add2) {
+	var hd = kitsune.hd;
+	var level = kitsune.level;
+	var hitPoints = 0;
+	var zeroLevelHitPoints = Math.floor((Math.random() * 4) + 1) + add1 + add2;
+	var hitPointsEachLevel = Math.floor((Math.random() * 6) + 1) + add1 + add2;
+	
+	if (level === 1) {
+		hitPoints = zeroLevelHitPoints + hitPointsEachLevel;
+		if (hitPoints <= 3) {
+			hitPoints = 4;
+		}
+	}	
+	else if (level === 2) {
+		hitPoints = zeroLevelHitPoints + hitPointsEachLevel + hitPointsEachLevel;
+		if (hitPoints <= 6) {
+			hitPoints = 7;
+		}
+	}
+	else if (level === 3) {
+		hitPoints = zeroLevelHitPoints + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel;
+		if (hitPoints <= 9) {
+			hitPoints = 10;
+		}
+	}
+	else if (level === 4) {
+		hitPoints = zeroLevelHitPoints + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel;
+		if (hitPoints <= 11) {
+			hitPoints = 12;
+		}
+	}
+	else if (level === 5) {
+		hitPoints = zeroLevelHitPoints + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel
+		 + hitPointsEachLevel;
+		if (hitPoints <= 13) {
+			hitPoints = 14;
+		}
+	}
+	else if (level === 6) {
+		hitPoints = zeroLevelHitPoints + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel
+		 + hitPointsEachLevel + hitPointsEachLevel;
+		if (hitPoints <= 15) {
+			hitPoints = 16;
+		}
+	}
+	else if (level === 7) {
+		hitPoints = zeroLevelHitPoints + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel
+		 + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel;
+		if (hitPoints <= 17) {
+			hitPoints = 18;
+		}
+	}
+	else if (level === 8) {
+		hitPoints = zeroLevelHitPoints + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel
+		 + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel;
+		if (hitPoints <= 19) {
+			hitPoints = 20;
+		}
+	}
+	else if (level === 9) {
+		hitPoints = zeroLevelHitPoints + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel
+		 + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel;
+		if (hitPoints <= 21) {
+			hitPoints = 22;
+		}
+	}
+	else if (level === 10) {
+		hitPoints = zeroLevelHitPoints + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel
+		 + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel + hitPointsEachLevel;
+		if (hitPoints <= 23) {
+			hitPoints = 24;
+		}
+	}
+	return hitPoints;
+}	  
+	  
+  
+        var imgData = "images/dcc_kitsune.png";
+        document.getElementById("character_sheet").src = imgData;
+
+	  var data = Character();
+		 
+		  
+        document.getElementById("name").innerHTML = data.name;
+	  
+        document.getElementById("title").innerHTML = data.title;  
+	  
+        document.getElementById("strength").innerHTML = data.strength;  
+        document.getElementById("agility").innerHTML = data.agility;  
+        document.getElementById("stamina").innerHTML = data.stamina;  
+        document.getElementById("personality").innerHTML = data.personality;   
+        document.getElementById("intelligence").innerHTML = data.intelligence;  
+        document.getElementById("luck").innerHTML = data.luck;       
+	   
+	   
+        document.getElementById("strengthMod").innerHTML = addModifierSign(data.strengthModifier);  
+        document.getElementById("agilityMod").innerHTML = addModifierSign(data.agilityModifier);  
+        document.getElementById("staminaMod").innerHTML = addModifierSign(data.staminaModifier);  
+        document.getElementById("personalityMod").innerHTML = addModifierSign(data.personalityModifier);   
+        document.getElementById("intelligenceMod").innerHTML = addModifierSign(data.intelligenceModifier);  
+        document.getElementById("luckMod").innerHTML = addModifierSign(data.luckModifier);   
+		
+	
+       document.getElementById("occupation").innerHTML = data.occupation; 
+       document.getElementById("alignment").innerHTML = data.alignment; 
+	   
+	  
+        document.getElementById("luckySignNotes").innerHTML = data.luckySign; 
+        document.getElementById("luckyRoll").innerHTML = data.luckyRoll;  
+        document.getElementById("luckySignBonus").innerHTML = addModifierSign(data.luckySignBonus); 
+        document.getElementById("level").innerHTML = data.level;
+        document.getElementById("baseLanguages").innerHTML = data.baseLanguages; 
+        document.getElementById("bonusLanguages").innerHTML = data.bonusLanguages; 
+	  
+	  
+        document.getElementById("baseArmourClass").innerHTML = data.baseArmourClass; 
+      
+        document.getElementById("hitPoints").innerHTML = data.hitPoints;  
+	    document.getElementById("zeroWeapon").innerHTML =data.zeroWeapon;
+	    document.getElementById("fumbleDie").innerHTML = data.fumbleDie; 
+	    document.getElementById("init").innerHTML = addModifierSign(data.init); 
+	    document.getElementById("speed").innerHTML = data.speed; 
+	  	document.getElementById("melee").innerHTML = addModifierSign(data.melee); 
+	    document.getElementById("range").innerHTML = addModifierSign(data.range); 
+	    document.getElementById("ref").innerHTML = addModifierSign(data.ref); 
+	    document.getElementById("fort").innerHTML = addModifierSign(data.fort); 
+	    document.getElementById("will").innerHTML = addModifierSign(data.will); 
+	  
+	  
+	    document.getElementById("actionDie").innerHTML = data.actionDie; 
+	    document.getElementById("critDie").innerHTML = data.critDie; 
+	    document.getElementById("critTable").innerHTML = data.critTable; 
+      
+	    document.getElementById("knownSpells").innerHTML = data.spells; 
+	    document.getElementById("maxSpells").innerHTML = data.maxSpells; 
+	  
+
+  </script>
+		
+	
+    
+</body>
+</html>

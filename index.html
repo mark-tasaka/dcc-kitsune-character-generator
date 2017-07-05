@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>GitHub Dungeon Crawl Classics Kitsune Character Generator</title>
+    
+	<meta charset="UTF-8">
+	<meta name="description" content="">
+	<meta name="keywords" content="">
+	<meta name="author" content="Mark Tasaka 2017">
+
+
+	<link rel="stylesheet" href="css/dcc_github.css"  />
+
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta charset="utf-8" />
+
+
+	</head>
+	
+	
+<body>
+
+
+	<section>
+		
+		<h1>Dungeon Crawl Classics Kitsune Character Generator</h1>
+		
+		<p>Welcome to the Launch Page of the Dungeon Crawl Classics Kitsune Generator.  The Kitsune Character Generator is designed using JavaScript and produce playable characters consistent with Goodman Games’ Dungeon Crawl Classics Pen and Paper Roleplaying System.</p>
+		
+		<p>For more information on the Dungeon Crawl Classics Game System, please visit:</p>
+		
+		<p><a href="http://goodman-games.com/" target="_blank" class="links">http://goodman-games.com/</a></p>
+		
+		<p>To see the generator used in the contents of the web, please visit:</p>
+		
+		<p><a href="http://www.oldschooladventures.org/dcc/homebrew/kitsune/" target="_blank" class="links">http://www.oldschooladventures.org/dcc//homebrew/kitsune/</a></p>
+		
+		
+		<h2>Kitsune Character Generator</h2>
+			
+		<div class="content">
+		
+			<form id="kitsune_form" action="" target="_blank">
+			
+			  <select id="level" class="dropdownmenu_cleric">
+				<option value="1" selected>Level 1</option>
+				<option value="2">Level 2</option>
+				<option value="3">Level 3</option>
+				<option value="4">Level 4</option>
+				<option value="5">Level 5</option>
+				<option value="6">Level 6</option>
+				<option value="7">Level 7</option>
+				<option value="8">Level 8</option>
+				<option value="9">Level 9</option>
+				<option value="10">Level 10</option>
+			  </select>
+			
+			  <select id="alignment" class="dropdownmenu2">
+				<option value="1"  selected id="">Lawful</option>
+				<option value="2" id="">Neutral</option>
+				<option value="3" id="">Chaos</option>
+			  </select>
+
+			
+			<div class="generatorb">
+				<input type="submit" value="Generate Kitsune" id="generate_level0_characters"/>
+
+				<input type="reset"  value="Reset" id="reset__level0_characters"/>
+		
+				</div>
+			
+				</form>
+                </div>
+                
+
+    </section>
+
+
+	<script>
+		document.getElementById("generate_level0_characters").onclick = function() {
+			
+			var level = "01";
+			
+			if(document.getElementById("level").value == 2) {
+				level = "02";
+			}
+			else if(document.getElementById("level").value == 3) {
+				level = "03";
+			}
+			else if(document.getElementById("level").value == 4) {
+				level = "04";
+			}
+			else if(document.getElementById("level").value == 5) {
+				level = "05";
+			}
+			else if(document.getElementById("level").value == 6) {
+				level = "06";
+			}
+			else if(document.getElementById("level").value == 7) {
+				level = "07";
+			}
+			else if(document.getElementById("level").value == 8) {
+				level = "08";
+			}
+			else if(document.getElementById("level").value == 9) {
+				level = "09";
+			}
+			else if(document.getElementById("level").value == 10) {
+				level = "10";
+			}
+			
+			var alignment = "1";
+			
+			if(document.getElementById("alignment").value == 2) {
+				alignment = "2";
+			}
+			else if(document.getElementById("alignment").value == 3) {
+				alignment = "3";
+			}
+			
+			document.getElementById("kitsune_form").action = "characters/dcc_Kitsune_" + alignment + level + ".html";
+
+		}
+	
+	
+	</script>
+        
+
+
+</body>
+    
+</html>
